@@ -1,0 +1,715 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sop-input",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "={{input-sop-file}}"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        16
+      ],
+      "id": "f38be5bb-b968-47f1-962c-b306364ae8bc",
+      "name": "Webhook",
+      "webhookId": "57980d75-39d1-405f-84d1-36b0b02340e4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f805c838-ae72-44c9-a29a-1d4321697efa",
+              "leftValue": "={{$binary[\"input-sop-file\"]}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        16
+      ],
+      "id": "f9b53518-f5a1-4af5-89b2-f649f02cbf87",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "={{$binary[\"input-sop-file\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2e0d9246-29f1-4191-b450-0fb9f755a80f",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0272b52e-d29f-4865-95c7-66ab9c7aa501",
+              "name": "File_text_input",
+              "value": "=Content From Input File:\n\n{{ $json.text || NaN}}\n",
+              "type": "string"
+            },
+            {
+              "id": "3e0a592b-d832-48a3-95a7-449ed22553d6",
+              "name": "text_input",
+              "value": "=Additional Input Content ( with file input given or without file input also ) : {{ $('Webhook').item.json.body.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        144,
+        192
+      ],
+      "id": "f39c5739-ba69-49b6-98a6-5c73dc7a9a47",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert technical writer and data processor. Your task is to analyze Standard Operating Procedure (SOP) content and generate structured training materials strictly in valid JSON format.\n\nMAIN CONTENT:\n{{$json[\"File_text_input\"]}}\n\nADDITIONAL CONTEXT:\n{{$json[\"text_input\"]}}\n\nTASK:\nGenerate structured training content in JSON format. Use MAIN CONTENT as the primary source. Use ADDITIONAL CONTEXT only if relevant. Ensure full coverage of important information.\n\nOUTPUT FORMAT (STRICT JSON):\n{\n  \"summary\": {\n    \"title\": \"string\",\n    \"key_points\": [\"point1\", \"point2\", \"point3\"]\n  },\n  \"training\": {\n    \"title\": \"string\",\n    \"steps\": [\n      {\n        \"step_number\": 1,\n        \"title\": \"string\",\n        \"description\": \"detailed explanation\"\n      }\n    ]\n  },\n  \"quiz\": {\n    \"title\": \"string\",\n    \"questions\": [\n      {\n        \"question\": \"string\",\n        \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n        \"correct_answer\": \"string\",\n        \"explanation\": \"why this is correct\"\n      }\n    ]\n  }\n}\n\nCONTENT RULES:\n1. Summary: 6–10 key points covering all major concepts.\n2. Training Steps: 5–8 clear and actionable steps.\n3. Quiz: 3–5 questions. Each must have exactly 4 options. Include the correct answer exactly as it appears in the options, plus an explanation.\n4. Ensure clean, readable, high-quality content. Do not include null or empty fields.\n\nSTRICT JSON SYNTAX RULES (CRITICAL):\n1. DO NOT output anything outside the JSON object. No conversational text, no introductions, no explanations.\n2. DO NOT wrap the output in Markdown blocks (e.g., do not use ```json or ```). Output raw text only.\n3. You MUST properly escape all double quotes within strings using a backslash (e.g., \\\"quoted text\\\"). Never leave stray or unescaped quotes.\n4. Avoid using newlines (\\n) inside string values unless absolutely necessary, and ensure they are properly escaped.\n5. No trailing commas at the end of arrays or objects.\n6. The final output must be perfectly parsable by standard JSON.parse() functions.",
+        "options": {
+          "systemMessage": "You are an expert Instructional Designer and Content Structuring AI.\n\nYour task is to convert SOP or document content into a high-quality structured JSON output.\n\nSTRICT RULES:\n1. Output ONLY valid JSON (no text, no explanation, no markdown).\n2. Follow the exact JSON schema provided in the user prompt.\n3. Do NOT add extra keys or remove required keys.\n4. Ensure the JSON is properly formatted and parsable.\n\nCONTENT RULES:\n- Extract meaningful and complete information from the input\n- Cover ALL important points in the summary (no loss of key info)\n- Keep content clear, structured, and easy to understand\n- Remove noise, irrelevant metadata, and formatting artifacts\n\nQUALITY REQUIREMENTS:\n- Summary must be comprehensive yet concise\n- Training steps must be logically ordered and actionable\n- Quiz questions must be relevant and test understanding of the content\n- Avoid repetition and vague statements\n\nIf the output is not valid JSON, regenerate internally before responding."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        384,
+        32
+      ],
+      "id": "1f4288dd-cf9d-473e-bbea-f2ee82fbe784",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        384,
+        208
+      ],
+      "id": "ad392bb2-1d1e-414a-8896-a0fd4afc0f3c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "e3zVbSqG9q4c3xzl",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2000,
+        48
+      ],
+      "id": "4954705a-513d-469e-96e3-dc4c380e24d2",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// 1. Gather Summary content\nconst summaryTitle = data.summary.title || \"\";\nconst summaryPoints = data.summary.key_points ? data.summary.key_points.join(\". \") : \"\";\nconst summaryText = `${summaryTitle}. ${summaryPoints}`;\n\n// 2. Gather Training content\nlet trainingText = \"\";\nif (data.training && data.training.steps) {\n  trainingText = data.training.steps.map(step => {\n    return `Step ${step.step_number}: ${step.title} - ${step.description}`;\n  }).join(\". \");\n}\n\n// 3. Combine Summary and Training into one string\n// We use .replace(/\\s+/g, ' ') to clean up any extra spaces\nconst combinedContent = `${summaryText}. ${trainingText}`.replace(/\\s+/g, ' ').trim();\n\n// 4. Return the simple JSON\nreturn [\n  {\n    json: {\n      content: combinedContent\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        432
+      ],
+      "id": "c7010c17-9b86-41dc-8592-fa2347856fd8",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "content": "={{ $json.content }}",
+        "advancedOptions": {}
+      },
+      "type": "n8n-nodes-presenton.presenton",
+      "typeVersion": 1,
+      "position": [
+        944,
+        432
+      ],
+      "id": "fbae889a-f48a-4db8-8d7f-1a2a38685b2b",
+      "name": "presenton",
+      "credentials": {
+        "presentonApi": {
+          "id": "LQjPW2SlVHsBtQcG",
+          "name": "Presenton account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "checkStatus",
+        "taskId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-presenton.presenton",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        432
+      ],
+      "id": "a5b232b1-4d26-4ffd-975f-60324367f026",
+      "name": "presenton1",
+      "credentials": {
+        "presentonApi": {
+          "id": "LQjPW2SlVHsBtQcG",
+          "name": "Presenton account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        432
+      ],
+      "id": "ea296cd4-748e-4070-b270-6e340d7370f4",
+      "name": "Wait",
+      "webhookId": "63fb8e6d-fc12-48cf-99b2-e45958808d61"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "73d8670a-fe65-4708-abcc-13e5e28d8ac9",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        432
+      ],
+      "id": "2a705960-5dab-4075-9ae0-d646f4079641",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get both inputs from Merge node\nconst items = $input.all();\n\n// Identify which item is which\nlet content = null;\nlet presentation = null;\n\nfor (const item of items) {\n  if (item.json.summary) {\n    content = item.json;\n  } else if (item.json.status === \"completed\") {\n    presentation = item.json;\n  }\n}\n\n// Safety checks\nif (!content) {\n  throw new Error(\"Content (summary/training/quiz) not found\");\n}\n\nif (!presentation || presentation.status !== \"completed\") {\n  throw new Error(\"Presentation not ready yet\");\n}\n\n// Final merged output\nconst finalOutput = {\n  summary: content.summary,\n  training: content.training,\n  quiz: content.quiz,\n  presentation: {\n    status: presentation.status,\n    message: presentation.message,\n    presentation_id: presentation.data.presentation_id,\n    download_url: presentation.data.path,\n    edit_url: presentation.data.edit_path,\n    credits_used: presentation.data.credits_consumed\n  }\n};\n\nreturn [\n  {\n    json: finalOutput\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        48
+      ],
+      "id": "90554810-f466-40f0-8bc4-cc0920cc1a0d",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "let data = $input.first().json;\n\nlet parsed;\n\n// Case 1: If AI returned JSON as string inside \"output\"\nif (typeof data.output === \"string\") {\n  try {\n    parsed = JSON.parse(data.output);\n  } catch (e) {\n    throw new Error(\"Invalid JSON string in 'output'\");\n  }\n} \n// Case 2: If AI already returned proper JSON\nelse if (typeof data === \"object\") {\n  parsed = data;\n} \n// Fallback\nelse {\n  throw new Error(\"Unexpected AI response format\");\n}\n\n// If it's wrapped in array → unwrap\nif (Array.isArray(parsed)) {\n  parsed = parsed[0];\n}\n\nreturn [\n  {\n    json: parsed\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        32
+      ],
+      "id": "85631c0c-4cba-451f-9ef7-b92391250459",
+      "name": "Code1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1552,
+        48
+      ],
+      "id": "bf8d8aa4-1644-4f63-8e97-48b0cd8152e9",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "# AI Agent Part\n\n1. Takes Input PDF/Text\n2. Use Gemini to generate JSON output for summary training contnent and quiz",
+        "height": 800,
+        "width": 1200
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -576,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "3a1a05d2-2667-4037-a271-bcc3a6f97974",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Slide Generation Part\n",
+        "height": 336,
+        "width": 1216
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        656,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "8ce6ef64-8ce6-477f-8995-c9ae6839c017",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "yash-singh.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+            "content-length": "1631869",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.6",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "114.69.253.113",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "IN",
+            "cf-ray": "9df5aa0bddae54de-DEL",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryPYJA4oZj2QQTroWx",
+            "origin": "https://id-preview--7efc9c00-eb33-4f7b-a564-cfc31d2d42df.lovable.app",
+            "priority": "u=1, i",
+            "referer": "https://id-preview--7efc9c00-eb33-4f7b-a564-cfc31d2d42df.lovable.app/",
+            "sec-ch-ua": "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Brave\";v=\"146\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "sec-gpc": "1",
+            "x-forwarded-for": "114.69.253.113, 172.69.203.123",
+            "x-forwarded-host": "yash-singh.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-swc-5-995478569-96jgg",
+            "x-is-trusted": "yes",
+            "x-real-ip": "114.69.253.113"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://yash-singh.app.n8n.cloud/webhook/sop-input",
+          "executionMode": "production"
+        },
+        "binary": {
+          "input-sop-file": {
+            "mimeType": "application/pdf",
+            "fileType": "pdf",
+            "fileExtension": "pdf",
+            "data": "filesystem-v2",
+            "fileName": "purchase-manual-sop.pdf",
+            "id": "filesystem-v2:workflows/j8yOfyeKstnvXVrH/executions/temp/binary_data/cdb0c219-3f12-40f8-8c6f-096904bba2c1",
+            "fileSize": "1.63 MB",
+            "bytes": 1631657
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Merge": [
+      {
+        "json": {
+          "summary": {
+            "title": "HBL Purchase Standard Operating Procedure (Rev 8)",
+            "key_points": [
+              "The SOP governs the entire procurement lifecycle from indenting to final payment for all domestic and import purchases.",
+              "Procurement is guided by principles of legality, accountability, ethics, social responsibility, and transparency.",
+              "All purchase activities begin with a Purchase Requisition (PR) raised in SAP, approved through a defined release strategy.",
+              "External Providers (vendors) must undergo a formal evaluation by Purchase and QA teams before being added to the Approved External Provider List.",
+              "A minimum of three quotes is preferred for Request for Quotation (RFQ) processes to ensure competitive landed cost comparisons.",
+              "Purchase Orders (PO) are issued based on a delegation of authority ranging from PPC Head (<50k INR) to SCM Head (>1Cr INR).",
+              "Quality Control (QC) performs inward inspection; material acceptance is required before generating a Goods Receipt Note (GRN).",
+              "Production Part Approval Process (PPAP) Level 2 is mandatory for new parts or significant changes in vendor processes/locations.",
+              "The Avinya Vendor Portal is the primary platform for RFQs, quotation comparisons, and order processing.",
+              "Specific controls are in place for import samples, which should ideally be on a Delivered Duty Paid (DDP) basis."
+            ]
+          },
+          "training": {
+            "title": "Procurement Process Workflow Training",
+            "steps": [
+              {
+                "step_number": 1,
+                "title": "Requisition Initiation",
+                "description": "User departments or PPC identify requirements and raise an online Purchase Requisition (PR) in SAP. Ensure all specifications, drawing numbers, and budget approvals (AON for capital items) are attached."
+              },
+              {
+                "step_number": 2,
+                "title": "Vendor Selection & RFQ",
+                "description": "Select vendors from the Approved External Provider List. If a new vendor is needed, initiate the registration and evaluation process. Float RFQs to at least three providers via the Avinya portal."
+              },
+              {
+                "step_number": 3,
+                "title": "Quotation Comparison & Negotiation",
+                "description": "Review the automated comparative statement in Avinya. Analyze landed costs, payment terms, and lead times. Conduct negotiations to finalize technical and commercial terms."
+              },
+              {
+                "step_number": 4,
+                "title": "Purchase Order (PO) Release",
+                "description": "Generate the PO in the system. It must be approved according to the value-based release strategy before being sent to the vendor along with the latest drawings or specifications."
+              },
+              {
+                "step_number": 5,
+                "title": "Expediting & Logistics",
+                "description": "Follow up with the vendor to ensure adherence to the delivery schedule. Coordinate transportation via empaneled logistics providers or internal arrangements as per the agreed Incoterms."
+              },
+              {
+                "step_number": 6,
+                "title": "Inward Inspection & Receipt",
+                "description": "Upon arrival, generate a gate entry. Quality Control (QC) inspects the material against the inspection plan. If accepted, Stores generate the Goods Receipt Note (GRN) and update stock."
+              },
+              {
+                "step_number": 7,
+                "title": "Invoice Verification & Payment",
+                "description": "Submit the original invoice, MIGO (Goods Movement), and duty credit documents to Finance. Finance performs Invoice Verification (MIRO) and processes payment per PO terms."
+              }
+            ]
+          },
+          "quiz": {
+            "title": "Purchase SOP Knowledge Assessment",
+            "questions": [
+              {
+                "question": "What is the minimum number of quotes preferably required when floating an RFQ for BOM items?",
+                "options": [
+                  "1 Quote",
+                  "2 Quotes",
+                  "3 Quotes",
+                  "5 Quotes"
+                ],
+                "correct_answer": "3 Quotes",
+                "explanation": "According to the SOP, for standard BOM items, RFQs are floated and preferably 3 quotes are collected to ensure a fair comparison."
+              },
+              {
+                "question": "Which process must be initiated if a supplier changes their production location or critical raw materials?",
+                "options": [
+                  "New Vendor Registration",
+                  "PPAP (Production Part Approval Process)",
+                  "Annual Maintenance Contract (AMC)",
+                  "Debit Note Review"
+                ],
+                "correct_answer": "PPAP (Production Part Approval Process)",
+                "explanation": "PPAP Level 2 is required for any new part submission or for approval of any significant change to an existing part or process, such as location or material changes."
+              },
+              {
+                "question": "What is the required score for an external provider to be 'Approved for Enlistment' during evaluation?",
+                "options": [
+                  "Greater than 50%",
+                  "Greater than or equal to 60%",
+                  "Greater than or equal to 75%",
+                  "Exactly 100%"
+                ],
+                "correct_answer": "Greater than or equal to 75%",
+                "explanation": "The SOP criteria states that a score of 75% and above is required for an external provider to be approved for enlistment."
+              },
+              {
+                "question": "Who has the authority to approve a Purchase Order (PO) with a value exceeding 10,000,001 INR?",
+                "options": [
+                  "Plant Head",
+                  "Purchase Head",
+                  "Corporate Finance",
+                  "SCM Head"
+                ],
+                "correct_answer": "SCM Head",
+                "explanation": "The approval strategy table identifies the SCM Head as the approver for values greater than 10,000,001 INR."
+              },
+              {
+                "question": "In the case of rejected materials at the inward stage, who is responsible for obtaining compliance from the provider for the SCAR (Supplier Corrective Action Request)?",
+                "options": [
+                  "Finance Department",
+                  "Purchase Department",
+                  "Maintenance Department",
+                  "Legal Department"
+                ],
+                "correct_answer": "Purchase Department",
+                "explanation": "While QC generates the SCAR, the SOP explicitly states it is the responsibility of the Purchase Department to obtain compliance from the External Provider for its closure."
+              }
+            ]
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "task-08da9d45157512a9969d963512612ef146ca488a1af43b1fef29960725c7de59",
+          "status": "completed",
+          "error": null,
+          "created_at": "2026-03-20T16:38:14.364659Z",
+          "data": {
+            "presentation_id": "cef6abf0-6a96-469e-b8a1-1bb2e27961ad",
+            "path": "https://presenton-public-eu.s3.eu-central-1.amazonaws.com/exports/pdf/HBL-Purchase-SOP--End-to-End-Procurement-Lifecycle_2a0c2bdb-3d6b-4c1b-8147-7f95c01a467b.pdf",
+            "edit_path": "https://presenton.ai/presentation?id=cef6abf0-6a96-469e-b8a1-1bb2e27961ad&type=standard",
+            "credits_consumed": 5
+          },
+          "message": "Presentation generation completed",
+          "updated_at": "2026-03-20T16:38:46.943327Z"
+        },
+        "pairedItem": {
+          "item": 0,
+          "input": 1
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "presenton",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "presenton": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "presenton1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "presenton1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "973b919d-5df6-477f-8a70-7acd0088866a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d911a39ddd9d5891138b8e75a85962bfe4e4f4ca7dce5a9be0bfccca17d93d6d"
+  },
+  "id": "j8yOfyeKstnvXVrH",
+  "tags": []
+}
