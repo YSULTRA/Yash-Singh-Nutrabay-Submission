@@ -1,5 +1,8 @@
 # 🚀 Yash-Singh-Nutrabay-Submission
 
+# 🌐 LIVE DEMO  
+# 👉👉 https://yash-singh-nutrabay-assessment.lovable.app/ 👈👈
+
 An AI-powered system that converts raw SOP documents into structured summaries, training modules, quizzes, and automatically generated presentation slides — all delivered through a modern web interface.
 
 ---
